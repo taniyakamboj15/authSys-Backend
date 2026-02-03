@@ -8,9 +8,7 @@ import logger from '../../common/utils/logger';
 import { getErrorMessage } from '../../common/utils/error.util';
 
 export class EmailController {
-  /**
-   * Send verification OTP to email
-   */
+ 
   async sendVerificationOTP(req: Request, res: Response, next: NextFunction) {
     const { email } = req.body;
 
@@ -41,9 +39,6 @@ export class EmailController {
     }
   }
 
-  /**
-   * Verify OTP and mark user as verified
-   */
   async verifyOTP(req: Request, res: Response, next: NextFunction) {
     const { email, otp } = req.body;
 
@@ -75,9 +70,7 @@ export class EmailController {
     }
   }
 
-  /**
-   * Resend verification OTP
-   */
+
   async resendOTP(req: Request, res: Response, next: NextFunction) {
     const { email } = req.body;
 
