@@ -10,7 +10,7 @@ import { getErrorMessage } from '../../common/utils/error.util';
 export class EmailController {
  
   async sendVerificationOTP(req: Request, res: Response, next: NextFunction) {
-    const { email } = req.body;
+    const email = req.body.email.trim();
 
     try {
       // Check if user exists
@@ -40,7 +40,8 @@ export class EmailController {
   }
 
   async verifyOTP(req: Request, res: Response, next: NextFunction) {
-    const { email, otp } = req.body;
+    const { otp } = req.body;
+    const email = req.body.email.trim();
 
     try {
       // Verify OTP
@@ -72,7 +73,7 @@ export class EmailController {
 
 
   async resendOTP(req: Request, res: Response, next: NextFunction) {
-    const { email } = req.body;
+    const email = req.body.email.trim();
 
     try {
       // Check if user exists

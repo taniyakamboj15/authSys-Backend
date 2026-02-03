@@ -4,14 +4,16 @@ export const sendOTPValidators = [
   body('email')
     .isEmail()
     .withMessage('Invalid email address')
-    .normalizeEmail(),
+    .trim()
+    .toLowerCase(),
 ];
 
 export const verifyOTPValidators = [
   body('email')
     .isEmail()
     .withMessage('Invalid email address')
-    .normalizeEmail(),
+    .trim()
+    .toLowerCase(),
   body('otp')
     .isString()
     .withMessage('OTP must be a string')
@@ -25,5 +27,6 @@ export const resendOTPValidators = [
   body('email')
     .isEmail()
     .withMessage('Invalid email address')
-    .normalizeEmail(),
+    .trim()
+    .toLowerCase(),
 ];
