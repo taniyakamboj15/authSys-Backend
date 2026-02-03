@@ -16,7 +16,6 @@ export const googleAuthCallback = (req: Request, res: Response, next: NextFuncti
       return next(new AuthError('Google Authentication Failed'));
     }
 
-    // Direct assignment now possible due to global Express.User type definition
     req.user = user;
     
     logger.info('Google OAuth Success', { userId: user._id, role: user.role });

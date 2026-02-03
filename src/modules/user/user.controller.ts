@@ -67,6 +67,26 @@ export class UserController {
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     res.redirect(`${clientUrl}/profile`);
   }
+
+  async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    await userService.requestPasswordReset(req.body.email);
+    ResponseUtil.success(res, null, 'If the email exists, a password reset OTP has been sent');
+  }
+
+  async verifyResetOTP(req: Request, res: Response, next: NextFunction) {
+    const { email, otp } = req.body;
+    const isValid = await userService.verifyPasswordResetOTP(email, otp);
+    if (!isValid) {
+      throw new AuthError('Invalid or expired OTP');
+    }
+    ResponseUtil.success(res, null, 'OTP verified successfully');
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    const { email, newPassword } = req.body;
+    await userService.resetUserPassword(email, newPassword);
+    ResponseUtil.success(res, null, 'Password reset successfully');
+  }
 }
 
 export const userController = new UserController();

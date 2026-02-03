@@ -25,8 +25,6 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       throw new AuthError('Invalid access token');
     }
 
-    // Performance Update: Trust the token claims instead of querying DB every request
-    // Since we include role in JWT and revocation is handled via short expiry
     req.user = {
       _id: decoded.userId,
       // Future-proof: Fallback to USER if role is missing/invalid type
@@ -35,7 +33,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     
     next();
   } catch (err) {
-    // Distinguish between Expired vs Invalid tokens for better client handling
+
     if (err instanceof jwt.TokenExpiredError) {
       return next(new AuthError('Token expired'));
     }

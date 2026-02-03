@@ -8,7 +8,7 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  // Handle Base Errors (Known App Errors)
+
   if (err instanceof BaseError) {
     if (err.isOperational) {
       logger.error('Operational Error', {
@@ -19,13 +19,11 @@ export const globalErrorHandler = (
         stack: err.stack,
       });
 
-      // Check if this is a ValidationError with details
       const response: any = {
         success: false,
         message: err.message,
       };
 
-      // Include validation details if available (for ValidationError)
       if ('details' in err && Array.isArray((err as any).details)) {
         response.errors = (err as any).details;
       }

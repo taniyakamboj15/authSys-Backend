@@ -118,6 +118,81 @@ export class EmailService {
       </html>
     `;
   }
+
+  async sendPasswordResetOTP(to: string, name: string, otp: string): Promise<void> {
+    try {
+      const mailOptions = {
+        from: `"Auth System" <${EMAIL_FROM}>`,
+        to,
+        subject: 'Reset Your Password',
+        html: this.getPasswordResetEmailTemplate(name, otp),
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      logger.info('Password reset email sent', { to, messageId: info.messageId });
+    } catch (error: any) {
+      logger.error('Failed to send password reset email', {
+        to,
+        error: error.message,
+        stack: error.stack,
+      });
+      throw new Error('Failed to send password reset email');
+    }
+  }
+
+  private getPasswordResetEmailTemplate(name: string, otp: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reset Your Password</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <tr>
+                  <td style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Reset Your Password</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 40px 30px;">
+                    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                      Hi ${name},
+                    </p>
+                    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                      We received a request to reset your password. Use the code below to complete the process:
+                    </p>
+                    <div style="background-color: #f8f9fa; border: 2px dashed #f5576c; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
+                      <p style="color: #666666; font-size: 14px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 1px;">Your Reset Code</p>
+                      <p style="color: #f5576c; font-size: 36px; font-weight: bold; margin: 0; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                        ${otp}
+                      </p>
+                    </div>
+                    <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
+                      <strong>Important:</strong> This code will expire in <strong>5 minutes</strong>. If you didn't request this, please ignore this email and your password will remain unchanged.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+                    <p style="color: #999999; font-size: 12px; margin: 0;">
+                      © ${new Date().getFullYear()} Auth System. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  }
 }
 
 export const emailService = new EmailService();

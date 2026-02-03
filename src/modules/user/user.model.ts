@@ -13,7 +13,7 @@ const userSchema = new Schema<IUserDocument>(
     },
     password: {
       type: String,
-      select: false, // Don't return password by default
+      select: false,
     },
     name: {
       type: String,

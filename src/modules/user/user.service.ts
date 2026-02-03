@@ -87,6 +87,51 @@ export class UserService {
       if(!user) throw new NotFoundError("User not found");
       return user;
   }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    
+    if (!user) {
+      return;
+    }
+
+    const { passwordService } = await import('../../services/password/password.service');
+    const otp = await passwordService.requestPasswordReset(normalizedEmail);
+    
+    try {
+      await emailService.sendPasswordResetOTP(user.email, user.name, otp);
+    } catch (error) {
+      logger.error('Failed to send password reset OTP:', error);
+    }
+  }
+
+  async verifyPasswordResetOTP(email: string, otp: string): Promise<boolean> {
+    const { passwordService } = await import('../../services/password/password.service');
+    return await passwordService.verifyResetOTP(email.toLowerCase(), otp);
+  }
+
+  async resetUserPassword(email: string, newPassword: string): Promise<void> {
+    const { passwordService } = await import('../../services/password/password.service');
+    const normalizedEmail = email.toLowerCase();
+    
+    const isVerified = await passwordService.isResetVerified(normalizedEmail);
+    if (!isVerified) {
+      throw new AuthError('Please verify OTP first');
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (user.password) {
+      await passwordService.resetPassword(normalizedEmail, newPassword, user.password);
+    }
+
+    user.password = await hashPassword(newPassword);
+    await user.save();
+  }
 }
 
 export const userService = new UserService();
