@@ -1,0 +1,108 @@
+import { Request, Response, NextFunction } from 'express';
+import { otpService } from '../../services/otp/otp.service';
+import { emailService } from '../../services/email/email.service';
+import { ResponseUtil } from '../../common/utils/response.util';
+import { User } from '../user/user.model';
+import { AuthError, NotFoundError } from '../../common/errors/AuthError';
+import logger from '../../common/utils/logger';
+
+export class EmailController {
+  /**
+   * Send verification OTP to email
+   */
+  async sendVerificationOTP(req: Request, res: Response, next: NextFunction) {
+    const { email } = req.body;
+
+    try {
+      // Check if user exists
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      // Check if already verified
+      if (user.isVerified) {
+        throw new AuthError('Email already verified');
+      }
+
+      // Generate and store OTP
+      const otp = await otpService.generateAndStoreOTP(email);
+
+      // Send email
+      await emailService.sendVerificationEmail(email, otp);
+
+      logger.info('Verification OTP sent', { email });
+      ResponseUtil.success(res, null, 'Verification code sent to your email');
+    } catch (error: any) {
+      logger.error('Failed to send verification OTP', { email, error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Verify OTP and mark user as verified
+   */
+  async verifyOTP(req: Request, res: Response, next: NextFunction) {
+    const { email, otp } = req.body;
+
+    try {
+      // Verify OTP
+      const isValid = await otpService.verifyOTP(email, otp);
+
+      if (!isValid) {
+        throw new AuthError('Invalid or expired verification code');
+      }
+
+      // Update user verification status
+      const user = await User.findOneAndUpdate(
+        { email: email.toLowerCase() },
+        { isVerified: true },
+        { new: true }
+      );
+
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      logger.info('Email verified successfully', { email });
+      ResponseUtil.success(res, { user }, 'Email verified successfully');
+    } catch (error: any) {
+      logger.error('OTP verification failed', { email, error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Resend verification OTP
+   */
+  async resendOTP(req: Request, res: Response, next: NextFunction) {
+    const { email } = req.body;
+
+    try {
+      // Check if user exists
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      // Check if already verified
+      if (user.isVerified) {
+        throw new AuthError('Email already verified');
+      }
+
+      // Generate and store new OTP
+      const otp = await otpService.generateAndStoreOTP(email);
+
+      // Send email
+      await emailService.sendVerificationEmail(email, otp);
+
+      logger.info('Verification OTP resent', { email });
+      ResponseUtil.success(res, null, 'Verification code resent to your email');
+    } catch (error: any) {
+      logger.error('Failed to resend verification OTP', { email, error: error.message });
+      throw error;
+    }
+  }
+}
+
+export const emailController = new EmailController();
