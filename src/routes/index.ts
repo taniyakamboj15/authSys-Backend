@@ -11,5 +11,6 @@ router.get('/health', (req, res) => {
 
 // Module routes
 router.use('/auth', userRoutes); // Mounting user routes under /auth since it handles login/signup
+router.use('/email', emailRoutes); // Email verification routes
 
 export default router;
