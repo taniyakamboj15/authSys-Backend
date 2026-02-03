@@ -11,8 +11,11 @@ interface ResetOTPData {
   expiresAt: number;
 }
 
+import { normalizeEmail } from '../../common/utils/email.helper';
+
 export class PasswordService {
   async requestPasswordReset(email: string): Promise<string> {
+    const normalizedEmail = normalizeEmail(email);
     const otp = crypto.randomInt(100000, 999999).toString();
     const otpData: ResetOTPData = {
       otp: await bcrypt.hash(otp, 10),
@@ -20,14 +23,15 @@ export class PasswordService {
       expiresAt: Date.now() + OTP_EXPIRY_SECONDS * 1000,
     };
 
-    const key = `password-reset-otp:${email.toLowerCase()}`;
+    const key = `password-reset-otp:${normalizedEmail}`;
     await redisClient.setex(key, OTP_EXPIRY_SECONDS, JSON.stringify(otpData));
 
     return otp;
   }
 
   async verifyResetOTP(email: string, otp: string): Promise<boolean> {
-    const key = `password-reset-otp:${email.toLowerCase()}`;
+    const normalizedEmail = normalizeEmail(email);
+    const key = `password-reset-otp:${normalizedEmail}`;
     const data = await redisClient.get(key);
 
     if (!data) {
@@ -55,23 +59,26 @@ export class PasswordService {
       return false;
     }
 
-    await redisClient.set(`verified-reset:${email.toLowerCase()}`, '1', 'EX', 600);
+    await redisClient.set(`verified-reset:${normalizedEmail}`, '1', 'EX', 600);
     await redisClient.del(key);
     return true;
   }
 
   async isResetVerified(email: string): Promise<boolean> {
-    const verified = await redisClient.get(`verified-reset:${email.toLowerCase()}`);
+    const normalizedEmail = normalizeEmail(email);
+    const verified = await redisClient.get(`verified-reset:${normalizedEmail}`);
     return verified === '1';
   }
 
   async resetPassword(email: string, newPassword: string, currentPasswordHash: string): Promise<void> {
+    const normalizedEmail = normalizeEmail(email);
+    // ... logic continues ...
     const isSamePassword = await bcrypt.compare(newPassword, currentPasswordHash);
     if (isSamePassword) {
       throw new Error('New password cannot be the same as the current password');
     }
 
-    await redisClient.del(`verified-reset:${email.toLowerCase()}`);
+    await redisClient.del(`verified-reset:${normalizedEmail}`);
   }
 }
 

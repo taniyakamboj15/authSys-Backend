@@ -8,6 +8,7 @@ import { sessionService } from '../session/session.service';
 import { otpService } from '../../services/otp/otp.service';
 import { emailService } from '../../services/email/email.service';
 import logger from '../../common/utils/logger';
+import { getErrorMessage } from '../../common/utils/error.util';
 
 export class UserService {
   async register(data: RegisterInput, userAgent?: string, ip?: string) {
@@ -30,8 +31,9 @@ export class UserService {
       const otp = await otpService.generateAndStoreOTP(email);
       await emailService.sendVerificationEmail(email, otp);
       logger.info('Verification OTP sent to new user', { email });
-    } catch (error: any) {
-      logger.error('Failed to send verification OTP', { email, error: error.message });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      logger.error('Failed to send verification OTP', { email, error: message });
       // Don't fail registration if email sending fails
     }
 

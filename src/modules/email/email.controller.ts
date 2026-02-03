@@ -5,6 +5,7 @@ import { ResponseUtil } from '../../common/utils/response.util';
 import { User } from '../user/user.model';
 import { AuthError, NotFoundError } from '../../common/errors/AuthError';
 import logger from '../../common/utils/logger';
+import { getErrorMessage } from '../../common/utils/error.util';
 
 export class EmailController {
   /**
@@ -33,8 +34,9 @@ export class EmailController {
 
       logger.info('Verification OTP sent', { email });
       ResponseUtil.success(res, null, 'Verification code sent to your email');
-    } catch (error: any) {
-      logger.error('Failed to send verification OTP', { email, error: error.message });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      logger.error(`Failed to send verification OTP: ${message}`, { email, error: message });
       throw error;
     }
   }
@@ -66,8 +68,9 @@ export class EmailController {
 
       logger.info('Email verified successfully', { email });
       ResponseUtil.success(res, { user }, 'Email verified successfully');
-    } catch (error: any) {
-      logger.error('OTP verification failed', { email, error: error.message });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      logger.error('OTP verification failed', { email, error: message });
       throw error;
     }
   }
@@ -98,11 +101,13 @@ export class EmailController {
 
       logger.info('Verification OTP resent', { email });
       ResponseUtil.success(res, null, 'Verification code resent to your email');
-    } catch (error: any) {
-      logger.error('Failed to resend verification OTP', { email, error: error.message });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      logger.error('Failed to resend verification OTP', { email, error: message });
       throw error;
     }
   }
 }
+
 
 export const emailController = new EmailController();

@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import logger from '../../common/utils/logger';
+import { getErrorMessage } from '../../common/utils/error.util';
 
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
@@ -12,30 +13,28 @@ if (!SMTP_USER || !SMTP_PASS) {
   throw new Error('SMTP_USER and SMTP_PASS must be set in environment variables');
 }
 
-// Create reusable transporter
+
 const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
   port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for other ports
+  secure: SMTP_PORT === 465, 
   auth: {
     user: SMTP_USER,
     pass: SMTP_PASS,
   },
 });
 
-// Verify connection configuration
-transporter.verify((error: any, success: any) => {
+
+transporter.verify((error, success) => {
   if (error) {
-    logger.error('SMTP connection failed', { error: error.message });
+    logger.error('SMTP connection failed', { error });
   } else {
-    logger.info('SMTP server is ready to send emails');
+    logger.info('SMTP connection established successfully');
   }
 });
 
 export class EmailService {
-  /**
-   * Send verification OTP email
-   */
+
   async sendVerificationEmail(to: string, otp: string): Promise<void> {
     try {
       const mailOptions = {
@@ -47,19 +46,14 @@ export class EmailService {
 
       const info = await transporter.sendMail(mailOptions);
       logger.info('Verification email sent', { to, messageId: info.messageId });
-    } catch (error: any) {
-      logger.error('Failed to send verification email', {
-        to,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw new Error('Failed to send verification email');
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      logger.error('Error sending verification email', { to, error: message });
+      throw new Error(`Failed to send verification email: ${message}`);
     }
   }
 
-  /**
-   * HTML email template for verification
-   */
+
   private getVerificationEmailTemplate(otp: string): string {
     return `
       <!DOCTYPE html>
@@ -130,11 +124,12 @@ export class EmailService {
 
       const info = await transporter.sendMail(mailOptions);
       logger.info('Password reset email sent', { to, messageId: info.messageId });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
       logger.error('Failed to send password reset email', {
         to,
-        error: error.message,
-        stack: error.stack,
+        error: message,
+        stack: error instanceof Error ? error.stack : undefined,
       });
       throw new Error('Failed to send password reset email');
     }

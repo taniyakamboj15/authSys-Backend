@@ -13,9 +13,9 @@ export class NotFoundError extends BaseError {
 }
 
 export class ValidationError extends BaseError {
-  public details?: any[];
+  public details?: Record<string, unknown>[];
 
-  constructor(message: string = 'Validation failed', details?: any[]) {
+  constructor(message: string = 'Validation failed', details?: Record<string, unknown>[]) {
     super(message, 400);
     this.details = details;
   }

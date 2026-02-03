@@ -24,6 +24,6 @@ export const generateRefreshToken = (userId: string | Types.ObjectId, role: User
 
 
 export const verifyToken = (token: string): TokenPayload => {
-// Removed try/catch to let middleware handle specific error types (Expired vs Malformed)
+
     return jwt.verify(token, process.env.JWT_SECRET as string) as TokenPayload;
 };

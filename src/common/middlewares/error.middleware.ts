@@ -19,13 +19,13 @@ export const globalErrorHandler = (
         stack: err.stack,
       });
 
-      const response: any = {
+      const response: Record<string, unknown> = {
         success: false,
         message: err.message,
       };
 
-      if ('details' in err && Array.isArray((err as any).details)) {
-        response.errors = (err as any).details;
+      if ('details' in err && Array.isArray((err as { details: unknown[] }).details)) {
+        response.errors = (err as { details: unknown[] }).details;
       }
 
       if (process.env.NODE_ENV === 'development') {
