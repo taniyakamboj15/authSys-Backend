@@ -37,7 +37,7 @@ export class SessionService {
     });
 
     if (!session) {
-      // Reuse detection: Valid signature but no session means it was likely rotated/stolen.
+
       await Session.deleteMany({ userId: payload.userId });
       throw new AuthError('Session reuse detected. Security alert: All sessions revoked.');
     }
